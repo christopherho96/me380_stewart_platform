@@ -1,19 +1,4 @@
 
-/* =================================================================================================== 
- *  This code has been provided as an example to help you get started on your project. The objective 
- *  is to provide user input to the Arduino board and have the servo motors actuate. Several lines of 
- *  code are accredited to the Adafruit PWM Servo Driver Library example code. To use the Adafruit 
- *  PWM Servo Shield, be sure to add the Adafruit library to your Arduino IDE. 
- *  (Adafruit example: File menu > Examples > Adafruit PWM Servo Drivers Library > servo)
- *  
- *  Add Adafruit Library: In the Arduino IDE application select: Sketch menu > Include Libraries > 
- *  Manage Libraries. In the Library Manager window, search and install the "Adafruit PWM Servo 
- *  Driver Library".
- *  
- *  NOTE: Depending on your servo motor, the pulse width min/max may be different. Adjust to match 
- *  your servo motor.
- =================================================================================================== */
-
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 
@@ -73,70 +58,98 @@ void loop() {
 
       // motor 1,3 paired
 
+      case '4':
+        val[3]= min( val[3]+SERVOCHG, SERVOMAX );
+        update();
+        break;
+      case 'r':
+        val[3]= max( val[3]-SERVOCHG, SERVOMIN );
+        update();
+        break;
+
       case '@':
         balance();
         delay(3000);
 
         // move ball to corner
         val[5]= min( val[5]+100, maxs[5] );
-        val[3]= max( val[3]-100, mins[3] );
+        val[3]= max( val[3]+100, mins[3] );
         update();
         delay(3000);
-
-        val[5]= min( val[5]+SERVOCHG, maxs[5] );
-        val[3]= max( val[3]-SERVOCHG, mins[3] );
-        update();
-        delay(2000);
 
         //begin slight tilts, repeat
-        val[0]= max( val[0]-SERVOCHG, mins[0]);
-        val[4]= max( val[4]-SERVOCHG, mins[4]);
+        val[0]= max( val[0]-10, mins[0]);
+        val[4]= max( val[4]-10, mins[4]);
         update();
         delay(2000);
+
+        val[0]= max( val[0]-10, mins[0]);
+        val[4]= max( val[4]-10, mins[4]);
+        update();
+        delay(2000);
+
+        val[0]= max( val[0]-10, mins[0]);
+        val[4]= max( val[4]-10, mins[4]);
+        update();
+        delay(2000);
+
+        val[0]= max( val[0]-10, mins[0]);
+        val[4]= max( val[4]-10, mins[4]);
+        update();
+        delay(2000);
+
+
+        ///
         
         val[0]= max( val[0]-SERVOCHG, mins[0]);
         val[4]= max( val[4]-SERVOCHG, mins[4]);
         update();
-        delay(2000);
+        delay(1000);
+
+
+        //should start rolling now
         
-        val[0]= max( val[0]-SERVOCHG, mins[0]);
-        val[4]= max( val[4]-SERVOCHG, mins[4]);
-        update();
-        delay(2000);
+//        val[0]= max( val[0]-SERVOCHG, mins[0]);
+//        val[4]= max( val[4]-SERVOCHG, mins[4]);
+//        update();
+//        delay(750);
 
-        val[0]= max( val[0]-SERVOCHG, mins[0]);
-        val[4]= max( val[4]-SERVOCHG, mins[4]);
-        update();
-        delay(2000);
+//        val[0]= max( val[0]-SERVOCHG, mins[0]);
+//        val[4]= max( val[4]-SERVOCHG, mins[4]);
+//        update();
+//        delay(2000);
+//
+//        val[0]= max( val[0]-SERVOCHG, mins[0]);
+//        val[4]= max( val[4]-SERVOCHG, mins[4]);
+//        update();
+//        delay(750);
 
-        val[0]= max( val[0]-SERVOCHG, mins[0]);
-        val[4]= max( val[4]-SERVOCHG, mins[4]);
-        update();
-        delay(750);
-
-        // hit the sharp turn right here
-        val[1]= max( val[1]-50, mins[1] );
-        val[2]= min( val[2]+50, maxs[2] );
-        val[0] = mids[0];
+         //hit the sharp turn right here
+        val[0]= max( val[0]-45, mins[0]);
+        val[4]= max( val[4]-45, mins[4]);
         update();
         delay(3000);
 
-        // straighten up
-        val[5] = mids[5];
-        val[0] = max( val[0]-SERVOCHG, mins[0]);
-        update();
-        delay(3000);
-
-        // tilt ball into finish position
-        val[0]= max( val[0]-SERVOCHG, mins[0]);
-        val[4]= max( val[4]-SERVOCHG, mins[4]);
-        update();
-        delay(2000);
-
-        val[0]= max( val[0]-SERVOCHG, mins[0]);
-        val[4]= max( val[4]-SERVOCHG, mins[4]);
-        update();
-        delay(2000);
+//        val[5]= mids[5];
+//        update();
+//        delay(1200);
+//
+//        // straighten up
+//        val[5] = mids[5];
+//        val[0] = max( val[0]-SERVOCHG, mins[0]);
+//        update();
+//        delay(3000);
+//
+//        // tilt ball into finish position
+//        val[0]= max( val[0]-SERVOCHG, mins[0]);
+//        val[4]= max( val[4]-SERVOCHG, mins[4]);
+//        update();
+//        delay(2000);
+//
+//        val[0]= max( val[0]-SERVOCHG, mins[0]);
+//        val[4]= max( val[4]-SERVOCHG, mins[4]);
+//        update();
+//        delay(2000);
    
         Serial.println("Finished Solving");
         break;   
