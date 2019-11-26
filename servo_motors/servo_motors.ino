@@ -1,19 +1,14 @@
-
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
-
-const int SERVOMIN = 175; // 'minimum' pulse length count (out of 4096)
-const int SERVOMAX = 475; // 'maximum' pulse length count (out of 4096)
-const int SERVOMID = floor((SERVOMAX+SERVOMIN)/2); // 'mid' pulse length count (out of 4096)
-const int SERVOCHG = 20; // 'change' pulse length count
 
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 
 String valInput; // Serial input var.
-int val[6] = {309, 325, 330, 287, 310, 332}; // PWM var
-int mins[6] = {140, 132, 142, 90, 90, 138}; // lower bounds for each motor
-int mids[6] = {309, 325, 330, 295, 295, 332}; // reset points
-int maxs[6] = {478, 518, 518, 500, 500, 527}; // upper bounds for each motor
+float val[6] = {309, 325, 330, 287, 310, 332}; // PWM var
+float mins[6] = {140, 132, 142, 90, 90, 138}; // lower bounds for each motor
+float mids[6] = {309, 325, 330, 295, 295, 332}; // reset points
+float maxs[6] = {478, 518, 518, 500, 500, 527}; // upper bounds for each motor
+
 
 void setup() {
   Serial.begin(9600); // opens serial port, sets data rate to 9600 bps
@@ -41,130 +36,210 @@ void update(){
     }
     Serial.println("]");
 }
+void turn(){
+  for (int i=0; i<10; i++) {
+    val[0]= max( val[0]- MINICHG*1.3, mins[0] );
+    val[4]= max( val[4]- MINICHG*1.3, mins[4] );
+  } 
+  update();
+}
+
+void start(){
+  val[0]= min( val[0]+ 25, maxs[0] );
+  val[1]= max( val[1]- 25, mins[1] );
+  val[4]= min( val[4]+ 25, maxs[4] );
+  val[5]= max( val[5]- 25, mins[5] );
+}
 
 void loop() {
   if (Serial.available() > 0) {
     valInput = Serial.readString();
     Serial.print("I received: ");
     Serial.print(valInput);
-
+    
+    int inc = 0;
+    int inc2 = 0;
+    
     switch (valInput[0]) {
-      // Input of "1" to "6" -> increase respective (1..6) values
-      // Input of [q,w,e,r,t,y] -> decrease respective (1..6) values
-
-      // paired motors 
-      // index+1 = motor number
-      // example: index 2 controls motor 3 
-
-      // motor 1,3 paired
-
-      case '4':
-        val[3]= min( val[3]+SERVOCHG, SERVOMAX );
+      case 'n':
+       //TURN
+        val[0]= max( val[0]- 50, mins[0] );
+        val[4]= max( val[4]- 80, mins[4] );
         update();
-        break;
-      case 'r':
-        val[3]= max( val[3]-SERVOCHG, SERVOMIN );
+        delay(500);
+
+        //kick into turn
+        val[1]= min( val[1]+ 50, maxs[1] );
+        ///////////// testing
+        val[0]= mids[0];
+        val[5]= mids[5];
+        /////////////
+        //
+        val[3]= mids[3];
         update();
+        //1500
+        delay(500);
         break;
 
+      case 'o':         
+        //ride the wall
+        val[4]= min( val[4]+32, maxs[4] );
+        val[5]= max( val[5]-32, mins[5] );
+        update();
+
+        //delay(1200) gives 6/10 success on turn
+        delay(1000);
+        break;
+
+      case 'y':
+        while (inc<12) {
+            val[1]= max( val[1]-10, mins[1] );
+            val[2]= min( val[2]+10, maxs[2] );
+            val[5]= mids[5];
+            update();
+            inc++;
+          }
+          delay(1500);
+          //tilt it into finish
+          while (inc<20) {
+            val[0]= min( val[0]+ 10, maxs[0] );
+            val[4]= max( val[4]- 10, mins[4] );
+            update();
+            inc++;
+          }
+          delay(1500);
+          val[0]= min( val[0]+ 50, maxs[0] );
+          val[1] = mids[1];
+          val[4]= max( val[4]- 25, mins[4] );
+          update();
+          break;
+
+      case 't':
+        while (inc<30) {
+          val[3]= max( val[3]-(MINICHG*1.2)*1.6, mins[3] );
+          val[5]= min( val[5]+ MINICHG*1.3, maxs[5] );
+          delay(15);
+          update();
+          inc++;
+        }
+        inc=0;
+        delay(4000);
+   
+        while (inc<70) {
+          val[3]= min( val[3]+(MINICHG*1.2), mids[3] +40);
+          val[5]= max( val[5]- MINICHG*0.8, mids[5] );
+          delay(20);
+          update();
+          inc++;
+        }
+        inc=0;
+        //val[3]= min( val[3]+40, maxs[3] );
+        val[3]= min( val[3]+60, maxs[3] );
+        update();
+        delay(3000);
+        break;
+      
       case '@':
-        balance();
-        delay(3000);
 
-        // move ball to corner
-        val[5]= min( val[5]+100, maxs[5] );
-        val[3]= max( val[3]+100, mins[3] );
+        // going downnnnn
+        while (inc<30) {
+          val[3]= max( val[3]-(MINICHG*1.2)*1.6, mins[3] );
+          val[5]= min( val[5]+ MINICHG*1.3, maxs[5] );
+          delay(15);
+          update();
+          inc++;
+        }
+        inc=0;
+        delay(4000);
+
+        while (inc<70) {
+          val[3]= min( val[3]+(MINICHG*1.2), mids[3] +40);
+          val[5]= max( val[5]- MINICHG*0.8, mids[5] );
+          delay(20);
+          update();
+          inc++;
+        }
+        inc=0;
+        //val[3]= min( val[3]+40, maxs[3] );
+        val[3]= min( val[3]+60, maxs[3] );
         update();
         delay(3000);
 
-        //begin slight tilts, repeat
-        val[0]= max( val[0]-10, mins[0]);
-        val[4]= max( val[4]-10, mins[4]);
-        update();
-        delay(2000);
-
-        val[0]= max( val[0]-10, mins[0]);
-        val[4]= max( val[4]-10, mins[4]);
-        update();
-        delay(2000);
-
-        val[0]= max( val[0]-10, mins[0]);
-        val[4]= max( val[4]-10, mins[4]);
-        update();
-        delay(2000);
-
-        val[0]= max( val[0]-10, mins[0]);
-        val[4]= max( val[4]-10, mins[4]);
-        update();
-        delay(2000);
-
-
-        ///
         
-        val[0]= max( val[0]-SERVOCHG, mins[0]);
-        val[4]= max( val[4]-SERVOCHG, mins[4]);
+        //ride the wall
+        val[4]= min( val[4]+32, maxs[4] );
+        val[5]= max( val[5]-32, mins[5] );
         update();
+
+        //delay(1200) gives 6/10 success on turn
         delay(1000);
 
-
-        //should start rolling now
-        
-//        val[0]= max( val[0]-SERVOCHG, mins[0]);
-//        val[4]= max( val[4]-SERVOCHG, mins[4]);
-//        update();
-//        delay(750);
-
-//        val[0]= max( val[0]-SERVOCHG, mins[0]);
-//        val[4]= max( val[4]-SERVOCHG, mins[4]);
-//        update();
-//        delay(2000);
-//
-//        val[0]= max( val[0]-SERVOCHG, mins[0]);
-//        val[4]= max( val[4]-SERVOCHG, mins[4]);
-//        update();
-//        delay(750);
-
-         //hit the sharp turn right here
-        val[0]= max( val[0]-45, mins[0]);
-        val[4]= max( val[4]-45, mins[4]);
+        //TURN
+        val[0]= max( val[0]- 50, mins[0] );
+        val[4]= max( val[4]- 80, mins[4] );
         update();
-        delay(3000);
+        delay(500);
 
+        //kick into turn
+        val[1]= min( val[1]+ 50, maxs[1] );
+        ///////////// testing
+        val[0]= mids[0];
+        val[5]= mids[5];
+        /////////////
+        //
+        val[3]= mids[3];
+        update();
+        //1500
+        delay(500);
+
+        //get into corner
+        while (inc<12) {
+          val[1]= max( val[1]-10, mins[1] );
+          val[2]= min( val[2]+10, maxs[2] );
+          val[5]= mids[5];
+//          val[0]= min( val[0]+ 5, maxs[0] );
+//          val[4]= max( val[4]- 5, mins[4] );
+          update();
+          inc++;
+        }
+
+//        inc =0;
+//        val[1]= max( val[1]-140, mins[1] );
+//        val[2]= min( val[2]+100, maxs[2] );
+//        //val[2]= max( val[2]-80, mins[2] );
 //        val[5]= mids[5];
+//        val[3]=mids[3];
 //        update();
-//        delay(1200);
-//
-//        // straighten up
-//        val[5] = mids[5];
-//        val[0] = max( val[0]-SERVOCHG, mins[0]);
-//        update();
-//        delay(3000);
-//
-//        // tilt ball into finish position
-//        val[0]= max( val[0]-SERVOCHG, mins[0]);
-//        val[4]= max( val[4]-SERVOCHG, mins[4]);
-//        update();
-//        delay(2000);
-//
-//        val[0]= max( val[0]-SERVOCHG, mins[0]);
-//        val[4]= max( val[4]-SERVOCHG, mins[4]);
-//        update();
-//        delay(2000);
-   
-        Serial.println("Finished Solving");
-        break;   
+        delay(1500);
 
-       // reset case for middle positions of all motors
+        //middle it
+//        val[1]= mids[1];
+//        val[2]= mids[2];
+//        update();
+//        delay(1500);
+
+        //tilt it into finish
+        while (inc<20) {
+          val[0]= min( val[0]+ 10, maxs[0] );
+          val[4]= max( val[4]- 10, mins[4] );
+          update();
+          inc++;
+        }
+        delay(1500);
+        val[0]= min( val[0]+ 50, maxs[0] );
+        val[1] = mids[1];
+        val[4]= max( val[4]- 25, mins[4] );
+        update();
+        break;
+     
+      // reset case for middle positions of all motors
       case 'm':
         balance();
         break;
 
+      //to stop clicking of stupid motor
       case '1': 
         val[0]= min( val[0]+SERVOCHG, SERVOMAX );
-        update();
-        break;
-      case 'q': 
-        val[0]= max( val[0]-SERVOCHG, SERVOMIN );
         update();
         break;
         
